@@ -1214,31 +1214,37 @@
       flex: 1;
     }
 
-    .sync-token-input {
-      display: none;
-      margin-bottom: 16px;
+    .sync-config {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
-    .sync-token-input.show { display: block; }
-
-    .sync-token-input input {
-      width: 100%;
-      padding: 12px 16px;
+    .sync-config input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px 14px;
       background: rgba(0,0,0,0.3);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text-primary);
       outline: none;
       transition: all 0.3s ease;
+      color-scheme: dark;
     }
 
-    .sync-token-input input:focus {
+    .sync-config input:focus {
       border-color: var(--accent-blue);
       box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
     }
 
-    .sync-token-input input::placeholder { color: var(--text-muted); }
+    .sync-config input::placeholder { color: var(--text-muted); }
+
+    .sync-config .btn {
+      flex-shrink: 0;
+      padding: 12px 18px;
+    }
 
     .sync-last-sync {
       font-size: 11px;
@@ -1854,6 +1860,10 @@
       </div>
       <div class="sync-info">
         使用 GitHub Gist 同步数据，跨设备访问你的记账记录。数据以私密 Gist 存储，仅你可见。
+      </div>
+      <div class="sync-config">
+        <input type="password" id="syncToken" placeholder="粘贴 GitHub Token (ghp_...)">
+        <button class="btn btn-primary" id="syncConnectBtn">连接</button>
       </div>
       <div class="sync-actions">
         <button class="btn btn-success" id="syncUploadBtn">上传数据</button>
@@ -2672,25 +2682,29 @@
     }
 
     async function connectGitHub() {
-      const tokenInput = document.getElementById('syncTokenInput');
       const token = document.getElementById('syncToken').value.trim();
 
       if (!token) {
-        tokenInput.classList.add('show');
+        alert('请先在输入框粘贴 GitHub Token，再点「连接」按钮。');
         document.getElementById('syncToken').focus();
         return;
       }
+
+      const btn = document.getElementById('syncConnectBtn');
+      const origText = btn.textContent;
+      btn.textContent = '连接中...';
+      btn.disabled = true;
 
       try {
         // 用用户输入的 token 验证（第三个参数临时传入，不依赖 localStorage）
         await gistFetch('https://api.github.com/user', {}, token);
         localStorage.setItem(GIST_TOKEN_KEY, token);
-        tokenInput.classList.remove('show');
-        
-        // 检查是否已有 Gist
+        // 连接成功后清空输入框（避免 token 长期暴露在输入框）
+        document.getElementById('syncToken').value = '';
+
+        // 检查是否已有 Gist，没有则顺手创建一个空的，方便后续上传
         let gistId = localStorage.getItem(GIST_ID_KEY);
         if (!gistId) {
-          // 创建新的私密 Gist
           const gist = await gistFetch('https://api.github.com/gists', {
             method: 'POST',
             body: JSON.stringify({
@@ -2707,13 +2721,26 @@
           localStorage.setItem(GIST_ID_KEY, gistId);
         }
 
-        updateSyncStatus('connected');
         localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
-        updateSyncUI();
+        updateSyncUI();  // 状态会自动变成「已连接」
+        btn.textContent = '✅ 已连接';
+        btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        setTimeout(() => {
+          btn.textContent = origText;
+          btn.style.background = '';
+          btn.disabled = false;
+        }, 2000);
       } catch (error) {
         console.error('连接失败:', error);
         updateSyncStatus('error');
-        alert('连接失败，请检查 Token 是否正确');
+        btn.textContent = '❌ 连接失败';
+        btn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        setTimeout(() => {
+          btn.textContent = origText;
+          btn.style.background = '';
+          btn.disabled = false;
+        }, 2000);
+        alert('连接失败：' + error.message + '\n\n常见：\n• 401 → Token 输错或已过期\n• 403 → Token 缺少 repo/gist 权限');
       }
     }
 
@@ -3697,8 +3724,11 @@
     });
 
     // GitHub 同步按钮
+    document.getElementById('syncConnectBtn').addEventListener('click', connectGitHub);
     document.getElementById('syncUploadBtn').addEventListener('click', uploadData);
     document.getElementById('syncDownloadBtn').addEventListener('click', downloadData);
+    // 回车键也触发连接
+    document.getElementById('syncToken').addEventListener('keypress', e => { if (e.key === 'Enter') connectGitHub(); });
 
     document.getElementById('exportBtn').addEventListener('click', () => {
       const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
