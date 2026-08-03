@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>胡俊的记账本</title>
+  <title>记账本</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
@@ -1594,7 +1594,7 @@
 </head>
 <body>
   <div class="header">
-    <h1>胡俊的记账本</h1>
+    <h1>记账本</h1>
     <div class="subtitle">Smart Finance Tracker</div>
   </div>
   <button class="settings-btn" id="settingsBtn">⚙️ AI 设置</button>
@@ -2694,7 +2694,7 @@
           const gist = await gistFetch('https://api.github.com/gists', {
             method: 'POST',
             body: JSON.stringify({
-              description: '胡俊记账本数据备份',
+              description: '记账本数据备份',
               public: false,
               files: {
                 'account_data.json': {
@@ -2731,7 +2731,7 @@
           const gist = await gistFetch('https://api.github.com/gists', {
             method: 'POST',
             body: JSON.stringify({
-              description: '胡俊记账本数据备份',
+              description: '记账本数据备份',
               public: false,
               files: {
                 'account_data.json': {
@@ -2789,7 +2789,7 @@
       if (!gistId) {
         try {
           const gists = await gistFetch('https://api.github.com/gists');
-          const accountGist = gists.find(g => g.description === '胡俊记账本数据备份');
+          const accountGist = gists.find(g => g.description === '记账本数据备份');
           if (accountGist) {
             gistId = accountGist.id;
             localStorage.setItem(GIST_ID_KEY, gistId);
@@ -3102,7 +3102,7 @@
       }
     }
 
-    const chatSysP = `你是记账助手胡俊AI。用户会描述收支情况，你要识别并返回JSON指令。
+    const chatSysP = `你是记账助手AI。用户会描述收支情况，你要识别并返回JSON指令。
 
 返回格式（纯JSON，不要markdown）：
 记账：{"action":"add_record","type":"income或expense","category":"分类","amount":金额数字,"note":"备注","date":"日期"}
@@ -3321,7 +3321,7 @@
       dataText += `\n合计：收入 ¥${totalIncome.toFixed(2)}，支出 ¥${totalExpense.toFixed(2)}，结余 ¥${(totalIncome - totalExpense).toFixed(2)}\n`;
 
       const rangeDesc = timeRange === 'day' ? '当日' : timeRange === 'week' ? '本周' : timeRange === 'month' ? '本月' : '自定义区间';
-      const sysP = `你是胡俊的个人财务分析助手。胡俊是一名大学生。请根据他的${rangeDesc}记账数据生成分析报告。\n\n报告包含：\n1. 收支总结（总收入、总支出、结余）\n2. 消费结构分析（各分类占比、最大支出）\n3. 消费习惯评价\n\n语气亲切自然，像朋友聊天，适当用emoji。数据引用要准确。`;
+      const sysP = `你是个人财务分析助手。用户是一名大学生。请根据他的${rangeDesc}记账数据生成分析报告。\n\n报告包含：\n1. 收支总结（总收入、总支出、结余）\n2. 消费结构分析（各分类占比、最大支出）\n3. 消费习惯评价\n\n语气亲切自然，像朋友聊天，适当用emoji。数据引用要准确。`;
       const messages = [{ role: 'system', content: sysP }, { role: 'user', content: dataText }];
 
       let text = '';
@@ -3341,7 +3341,7 @@
           if (navigator.share) {
             try {
               await navigator.share({
-                title: '胡俊的记账本 - 财务分析报告',
+                title: '记账本 - 财务分析报告',
                 text: reportText,
               });
             } catch (err) {
