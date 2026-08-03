@@ -1850,7 +1850,7 @@
     <div class="sync-card">
       <div class="sync-header">
         <div class="sync-title">☁️ 云同步</div>
-        <div class="sync-status connected" id="syncStatus">已连接</div>
+        <div class="sync-status" id="syncStatus">未连接</div>
       </div>
       <div class="sync-info">
         使用 GitHub Gist 同步数据，跨设备访问你的记账记录。数据以私密 Gist 存储，仅你可见。
@@ -2720,6 +2720,14 @@
     async function uploadData() {
       const btn = document.getElementById('syncUploadBtn');
       const origText = btn.textContent;
+
+      // 预检：必须先配置 token 并连接
+      const token = localStorage.getItem(GIST_TOKEN_KEY);
+      if (!token) {
+        alert('尚未连接 GitHub！\n\n请先在上方输入框填入你的 GitHub Token，然后点「连接」按钮，连接成功后再上传。');
+        return;
+      }
+
       btn.textContent = '上传中...';
       btn.disabled = true;
       
@@ -2774,12 +2782,22 @@
           btn.style.background = '';
           btn.disabled = false;
         }, 2000);
+        // 显示具体错误原因，帮用户定位
+        alert('上传失败：' + error.message + '\n\n常见原因：\n• 401 → Token 错误或已过期，重新生成并连接\n• 403 → Token 缺少 gist 权限\n• 404 → Gist ID 失效，可在控制台执行 localStorage.removeItem("account_gist_id") 后重试');
       }
     }
 
     async function downloadData() {
       const btn = document.getElementById('syncDownloadBtn');
       const origText = btn.textContent;
+
+      // 预检：必须先配置 token 并连接
+      const token = localStorage.getItem(GIST_TOKEN_KEY);
+      if (!token) {
+        alert('尚未连接 GitHub！\n\n请先在上方输入框填入你的 GitHub Token，然后点「连接」按钮，连接成功后再下载。');
+        return;
+      }
+
       btn.textContent = '下载中...';
       btn.disabled = true;
       
@@ -2870,6 +2888,9 @@
         const date = new Date(lastSync);
         document.getElementById('syncLastSync').textContent = `上次同步: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
       }
+      // 根据 localStorage 是否有 token 设置真实连接状态
+      const token = localStorage.getItem(GIST_TOKEN_KEY);
+      updateSyncStatus(token ? 'connected' : 'disconnected');
     }
 
     function renderWeek() {
